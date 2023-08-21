@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head th:replace="/common/fragments/header-config :: configFragment"></head>
+
+<body class="service_page">
+
+<div class="wrap" style="position: absolute; left: 100%;">
+    <div class="cont_area tcare">
+
+        <div id="content-wrapper" class="neoul-content content">
+            <!-- content -->
+            <div id="content" layout:fragment="content"></div>
+        </div>
+
+        <div id="dialog-part" style="display: none;" layout:fragment="dialog-part"></div>
+
+        <div id="sub-page-part" style="display: none;" layout:fragment="sub-page-part"></div>
+
+        <div id="side-panel-part" style="display: none;" layout:fragment="side-panel-part"></div>
+
+        <div id="pager-part" style="display: none;" layout:fragment="pager-part"></div>
+
+        <div id="html-part" style="display: none;" layout:fragment="html-part"></div>
+
+        <div class="swipe-box">
+            <div><i></i></div>
+        </div>
+
+        <input type="hidden" id="pageType" th:value="${pageType}" />
+        <input type="hidden" id="coinType" th:value="${coinType}" />
+    </div>
+
+    <div id="dialog-wrap"></div>
+
+    <div id="sub-page-area" class="hide"></div>
+
+    <div id="side-panel-container" class="hide">
+        <div class="side-panel-dim"></div>
+        <div class="side-panel-content left"></div>
+        <div class="side-panel-content right"></div>
+        <div class="side-panel-content bottom"></div>
+    </div>
+
+    <div class="attach-hidden-box">
+        <form id="uploadForm" name="uploadForm" method="post" enctype="multipart/form-data">
+            <input type="file" id="attach" name="attach"/>
+        </form>
+    </div>
+
+    <div id="app-dialog-part" style="display: none;">
+        <div class="dialog-main app-confirm">
+            <div class="dialog-header">
+                <h2><span class="en-label confirm">Confirm</span></h2>
+            </div>
+            <div class="dialog-content neoul-scrollbar">
+                <span class="dialog-message"></span>
+            </div>
+            <div class="dialog-action">
+                <button class="btn-ripple btn-secondary">
+                    <span class="btn-label"><span class="en-label cancel">Cancel</span></span>
+                </button>
+                <button class="btn-ripple btn-primary">
+                    <span class="btn-label"><span class="en-label set-up">Confirm</span></span>
+                </button>
+            </div>
+        </div>
+        <div class="dialog-main app-alert">
+            <div class="dialog-header">
+                <h2><span class="en-label notice">Alert</span></h2>
+            </div>
+            <div class="dialog-content neoul-scrollbar">
+                <span class="dialog-message"></span>
+            </div>
+            <div class="dialog-action">
+                <button class="btn-ripple btn-primary">
+                    <span class="btn-label"><span class="en-label set-up">Close</span></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div><!-- wrap -->
+
+</body>
+
+</html>

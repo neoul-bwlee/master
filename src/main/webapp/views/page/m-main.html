@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout/base-mobile-layout}">
+
+<head th:replace="/common/fragments/m-header-config :: configFragment"></head>
+
+<th:block layout:fragment="css">
+    <style type="text/css">
+    </style>
+</th:block>
+
+<th:block layout:fragment="script">
+    <script type="text/javascript" th:inline="javascript">
+        let userInfo = null;
+
+        function onFrontScriptReady() {
+            runPendingScripts();
+
+            console.log("front script ready...");
+
+            let userType = NSCommon.readCookie("tcare.user-type");
+            if (!NSCommon.isEmpty(userType) && userType === "guest") {
+                NSCommon.alert("로그인 정보가 없습니다. 다시 로그인 해주세요.", function () {
+                    TCARE.logout();
+                });
+                return;
+            }
+
+            let jsonUserInfo = NSCommon.readCookie("tcare.user-info");
+            if (NSCommon.isEmpty(jsonUserInfo)) {
+                NSCommon.alert("사용자 정보가 없습니다. 로그인을 다시 시도하세요.", function() {
+                    TCARE.logout();
+                    return;
+                });
+            }
+
+            userInfo = JSON.parse(jsonUserInfo);
+
+            registerCustomControlEvents();
+
+            NSSP.init(400);
+            NSCTRL.buildControls();
+
+            $(".ns-mobile-wrapper").addClass("showing");
+
+            $(".ns-tab-item").off("click");
+            $(".ns-tab-item").on("click", function() {
+                $(".ns-tab-item").removeClass("active");
+                $(this).addClass("active");
+                let tabIndex = $(".ns-tab-item").index($(this));
+                $(".gnb-content.home").addClass("hide");
+                $(".gnb-content").removeClass("active");
+                $(".gnb-content").eq(tabIndex).addClass("active");
+
+                onChangeTab(tabIndex);
+            });
+
+            $(".service-title.nav").off("click");
+            $(".service-title.nav").on("click", function() {
+                $(".gnb-content.home").removeClass("hide");
+                $(".gnb-content").removeClass("active");
+                $(".ns-tab-item").removeClass("active");
+
+                $(".btn-ripple.apply-cs").off("click");
+                $(".btn-ripple.apply-cs").on("click", function() {
+                    $(".ns-tab-item").eq(0).trigger("click");
+                });
+
+                $(".btn-ripple.logout").off("click");
+                $(".btn-ripple.logout").on("click", function() {
+                    TCARE.logout();
+                });
+
+                $(".agency-code").text("(" + userInfo.username + ")");
+                $(".agency-name > .name").text(NSCommon.B64.decode(userInfo.accountName));
+            });
+            $(".service-title.nav").trigger("click");
+
+            $(window).on("resize", function() {
+                if ($(".box-wrapper").width() > 412 * 2) {
+                    if ($(".service-logo").hasClass("hide") === true)$(".service-logo").removeClass("hide");
+                }
+                else {
+                    if ($(".service-logo").hasClass("hide") === false) $(".service-logo").addClass("hide");
+                }
+            });
+            $(window).trigger("resize");
+        }
+
+        function registerCustomControlEvents() {
+        }
+
+        function onChangeTab(tabIndex) {
+            if (tabIndex === 0) {
+                let csPagerOptions = {
+                    direction: "horizontal",
+                    pagerWidth: $(".ns-mobile-wrapper").width(),
+                    pagerHeight: $(".ns-mobile-wrapper").height() - 120,
+                    useWheel: false,
+                    useSwipe: false,
+                    overflow: "hidden",
+                    transitionTime: 400,
+                    fps: 30,
+                    progressListener: function (percent) {
+                    },
+                    completeListener: function (sliderNo) {
+                        handleCsSliderAction(sliderNo);
+                    }
+                };
+
+                CS_SLIDER.releasePages();
+
+                let pageCount = $("#pager-part .pager-page").length;
+                if (CS_SLIDER.getPageSize() === 0) {
+                    CS_SLIDER.init($("#ns-apply-cs"), csPagerOptions);
+                    for (let i = 0; i < pageCount; i++) {
+                        CS_SLIDER.addPage($("#pager-part .pager-page:eq(0)"));
+                    }
+                }
+                CS_SLIDER.movePage(0);
+            }
+            else if (tabIndex === 1) {
+
+            }
+            else if (tabIndex === 2) {
+
+            }
+        }
+
+        function handleCsSliderAction(sliderNo) {
+            if (sliderNo === 0) {
+                $(".cs-step[step='0'] .field-agency-name").text(
+                    NSCommon.B64.decode(userInfo.agencyInfo.agencyName)
+                    + " " + NSCommon.B64.decode(userInfo.agencyInfo.storeName));
+                $(".cs-step[step='0'] .field-address").text(
+                    NSCommon.B64.decode(userInfo.agencyInfo.address));
+
+                let agencyRepName = NSCommon.B64.decode(userInfo.agencyInfo.agencyRepName);
+                if (NSCommon.isEmpty(agencyRepName)) {
+                    $(".ns-checkbox.use-rep-name").removeClass("active");
+                    $(".cs-step[step='0'] #agency-rep-name").val("");
+                }
+                else {
+                    $(".ns-checkbox.use-rep-name").addClass("active");
+                    $(".cs-step[step='0'] #agency-rep-name").val(agencyRepName);
+                }
+
+                let agencyPhone = userInfo.agencyInfo.agencyPhone;
+                if (NSCommon.isEmpty(agencyPhone) || agencyPhone === "#N/A") {
+                    $(".cs-step[step='0'] #agency-phone-0").val("");
+                    $(".cs-step[step='0'] #agency-phone-1").val("");
+                    $(".cs-step[step='0'] #agency-phone-2").val("");
+                }
+                else {
+                    $(".cs-step[step='0'] #agency-phone-0").val(agencyPhone.substring(0, 3));
+                    $(".cs-step[step='0'] #agency-phone-1").val(agencyPhone.substring(3, 7));
+                    $(".cs-step[step='0'] #agency-phone-2").val(agencyPhone.substring(7));
+                }
+
+                $(".cs-step[step='0'] #agency-rep-name").off("blur");
+                $(".cs-step[step='0'] #agency-rep-name").on("blur", function() {
+                    canMoveNextStep(0);
+                });
+
+                $(".cs-step[step='0'] #agency-phone-0").off("blur");
+                $(".cs-step[step='0'] #agency-phone-0").on("blur", function() {
+                    canMoveNextStep(0);
+                });
+
+                $(".cs-step[step='0'] #agency-phone-1").off("blur");
+                $(".cs-step[step='0'] #agency-phone-1").on("blur", function() {
+                    canMoveNextStep(0);
+                });
+
+                $(".cs-step[step='0'] #agency-phone-2").off("blur");
+                $(".cs-step[step='0'] #agency-phone-2").on("blur", function() {
+                    canMoveNextStep(0);
+                });
+
+                canMoveNextStep(0);
+            }
+        }
+
+        function canMoveNextStep(stepNo) {
+            if (stepNo === 0) {
+                $(".btn-ripple.prev").removeClass("active");
+                $(".btn-ripple.next").removeClass("active");
+
+                if (NSCommon.isEmpty($("#agency-rep-name").val()) === false
+                    && NSCommon.isEmpty($("#agency-rep-name").val()) === false) {
+                    $(".btn-ripple.next").addClass("active");
+
+                    $(".btn-ripple.next").off("click");
+                    $(".btn-ripple.next").on("click", function() {
+                        CS_SLIDER.pageNext();
+                    });
+                }
+                else {
+                    $(".btn-ripple.next").off("click");
+                }
+            }
+        }
+    </script>
+</th:block>
+
+<div id="content" class="tcare-main" layout:fragment="content">
+    <div class="box-wrapper">
+        <div class="ns-mobile-wrapper">
+            <!-- topbar -->
+            <div class="top-bar">
+                <span class="service-title nav"><em class="typo-t">T</em><em class="typo-factory">Factory</em></span>
+                <ul class="ns-tab">
+                    <li class="ns-tab-item">CS신청 <em class="tab-bar"></em></li>
+                    <li class="ns-tab-item">처리현황 <em class="tab-bar"></em></li>
+                    <li class="ns-tab-item">매장정보 <em class="tab-bar"></em></li>
+                </ul>
+            </div>
+
+            <!-- content area -->
+            <div class="content-area neoul-scrollbar">
+                <div class="gnb-content">
+                    <div id="ns-apply-cs"></div>
+                    <div class="button-nav-box">
+                        <button type="button" class="btn-ripple prev">이전 단계로</button>
+                        <button type="button" class="btn-ripple next">다음 단계로</button>
+                    </div>
+                </div>
+                <div class="gnb-content">처리현황</div>
+                <div class="gnb-content">매장정보</div>
+                <div class="gnb-content home">
+                    <img src="/assets/images/telecom_deco.png" style="width: 100%; margin-bottom: 32px;" />
+                    <span class="agency-name"><em class="skt">SKT</em><em class="name">PS&M 뱅뱅사거리</em></span>
+                    <span class="agency-code">(D151420042)</span>
+                    <div style="height: 160px;"></div>
+                    <button type="button" class="btn-ripple apply-cs" style="margin-top: 16px;">CS 신청하기</button>
+                    <button type="button" class="btn-ripple logout" style="margin-top: 16px;">로그아웃</button>
+                </div>
+            </div>
+
+            <div class="service-logo hide" style="width: 275px; position: absolute; left: -275px; bottom: 72px;">
+                <img src="/assets/images/ilst_clerk.png" style="width: 275px; margin-bottom: 16px;"/>
+                <span class="service-branch">T-CARE SERVICE</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="pager-part" style="display: none;" layout:fragment="pager-part">
+    <div class="pager-page cs-step neoul-scrollbar" step="0" style="width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden;">
+        <div class="cs-step-panel">
+            <div class="step-info active">
+                <i class="ns-icon paper"></i>
+                <span class="step-name"><em>Step 1</em><em>기본정보 작성</em></span>
+            </div>
+            <div class="step-info">
+                <i class="ns-icon edit"></i>
+                <span class="step-name"><em>Step 2</em><em>신청서 작성</em></span>
+            </div>
+            <div class="step-info">
+                <i class="ns-icon done"></i>
+                <span class="step-name"><em>Step 3</em><em>신청 완료</em></span>
+            </div>
+        </div>
+        <div class="cs-info-table" style="margin-top: 16px;">
+            <table class="ns-table-static">
+                <tbody>
+                <tr>
+                    <td class="list-td form-label">매장명</td>
+                    <td class="list-td form-field"><span class="field-agency-name"></span></td>
+                </tr>
+                <tr>
+                    <td class="list-td form-label">매장주소</td>
+                    <td class="list-td form-field"><span class="field-address"></span></td>
+                </tr>
+                <tr>
+                    <td class="list-td form-label">이름</td>
+                    <td class="list-td form-field">
+                        <input type="text" id="agency-rep-name" class="ns-input-field" placeholder="담당자 이름" />
+                        <span class="ns-checkbox use-rep-name" style="margin-top: 16px; margin-left: 20px;" text-color="#afafaf"
+                              label="등록된 이름 사용"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="list-td form-label">전화번호</td>
+                    <td class="list-td form-field">
+                        <div class="tel-box">
+                            <input type="text" id="agency-phone-0" class="ns-input-field" placeholder="010" style="margin-right: 4px;" />
+                            <input type="text" id="agency-phone-1" class="ns-input-field" placeholder="0000" style="margin-right: 4px;" />
+                            <input type="text" id="agency-phone-2" class="ns-input-field" placeholder="0000" />
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="pager-page cs-step neoul-scrollbar" step="1" style="width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden;">
+        <div class="cs-step-panel">
+            <div class="step-info">
+                <i class="ns-icon paper"></i>
+                <span class="step-name"><em>Step 1</em><em>기본정보 작성</em></span>
+            </div>
+            <div class="step-info active">
+                <i class="ns-icon edit"></i>
+                <span class="step-name"><em>Step 2</em><em>신청서 작성</em></span>
+            </div>
+            <div class="step-info">
+                <i class="ns-icon done"></i>
+                <span class="step-name"><em>Step 3</em><em>신청 완료</em></span>
+            </div>
+        </div>
+        <div class="cs-info-table">
+            <table class="ns-table-static">
+                <tbody>
+                <tr>
+                    <td class="list-td form-label">문의분류</td>
+                    <td class="list-td form-field">
+                        <div class="ns-select qna-type"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="list-td form-label">제목</td>
+                    <td class="list-td form-field"><span class="field-address"></span></td>
+                </tr>
+                <tr>
+                    <td class="list-td form-label">내용</td>
+                    <td class="list-td form-field">
+                        <input type="text" id="agency-rep-name" class="ns-input-field" placeholder="담당자 이름" />
+                        <span class="ns-checkbox use-rep-name" style="margin-top: 16px; margin-left: 20px;" text-color="#afafaf"
+                              label="등록된 이름 사용"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="list-td form-label">사진</td>
+                    <td class="list-td form-field">
+                        <div class="image-list-box">
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="pager-page cs-step neoul-scrollbar" step="2" style="width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden;">
+        <div class="cs-step-panel">
+            <div class="step-info">
+                <i class="ns-icon paper"></i>
+                <span class="step-name"><em>Step 1</em><em>기본정보 작성</em></span>
+            </div>
+            <div class="step-info">
+                <i class="ns-icon edit"></i>
+                <span class="step-name"><em>Step 2</em><em>신청서 작성</em></span>
+            </div>
+            <div class="step-info active">
+                <i class="ns-icon done"></i>
+                <span class="step-name"><em>Step 3</em><em>신청 완료</em></span>
+            </div>
+        </div>
+        <div class="cs-info-table">
+
+        </div>
+    </div>
+</div>
+
+</html>

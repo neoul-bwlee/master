@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<div class="gnb" th:fragment="gnbFragment">
+    <div class="gnb-item active">
+        <i class="ns-icon gnb-home"></i>
+        <span class="gnb-name">HOME</span>
+    </div>
+    <div class="gnb-item">
+        <i class="ns-icon gnb-dag"></i>
+        <span class="gnb-name">DAG</span>
+    </div>
+    <div class="gotg-call-box">
+        <span class="gotg-call"><i class="ns-icon"></i></span>
+    </div>
+    <div class="gnb-item">
+        <i class="ns-icon gnb-staking"></i>
+        <span class="gnb-name">STAKING</span>
+    </div>
+    <div class="gnb-item">
+        <i class="ns-icon gnb-chat"></i>
+        <span class="gnb-name">CHAT</span>
+    </div>
+
+    <div class="gotg-action">
+        <div class="action-wrapper">
+            <div class="gotg-call-box">
+                <span class="gotg-call"><i class="ns-icon"></i></span>
+                <div class="action-item-box">
+                    <span class="action-item token-send"><div><i class="ns-icon"></i><em>Send</em></div></span>
+                    <span class="action-item token-receive"><div><i class="ns-icon"></i><em>Receive</em></div></span>
+                    <span class="action-item token-swap"><div><i class="ns-icon"></i><em>Swap</em></div></span>
+                    <span class="action-item token-transaction"><div><i class="ns-icon"></i><em>Transaction</em></div></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" th:inline="javascript">
+        function registerGnbActions() {
+            console.log("registerGnbActions called... ");
+
+            $(".gnb-item").off("click");
+            $(".gnb-item").on("click", function() {
+                let gnbIndex = $(".gnb-item").index($(this));
+                $(".gnb-item").removeClass("active");
+                $(this).addClass("active");
+                onClickGnbItem(gnbIndex);
+            });
+
+            $(".gnb > .gotg-call-box > .gotg-call").off("click");
+            $(".gnb > .gotg-call-box > .gotg-call").on("click", function() {
+                $(".gotg-action").addClass("active");
+                setTimeout(function() {
+                    $(".gotg-action .action-item").addClass("active");
+
+                    $(".gotg-action .action-item").off("click");
+                    $(".gotg-action .action-item").on("click", function() {
+                        let actionIndex = $(this).index();
+                        $(".gotg-action .gotg-call").trigger("click");
+                        setTimeout(function() {
+                            onClickActionItem(actionIndex);
+                        }, 401);
+                    });
+                }, 401);
+            });
+
+            $(".gotg-action .gotg-call").off("click");
+            $(".gotg-action .gotg-call").on("click", function() {
+                $(".gotg-action .action-item").removeClass("active");
+                setTimeout(function() {
+                    $(".gotg-action").removeClass("active");
+                }, 401);
+            });
+
+            let lastSeenPage = NSCommon.readCookie("tcare.last.page");
+            if (NSCommon.isEmpty(lastSeenPage))
+                lastSeenPage = 0;
+            NSCommon.createCookie("tcare.last.page", lastSeenPage, 24 * 60 * 60 * 1000);
+            $(".gnb-item").eq(lastSeenPage).trigger("click");
+        }
+        pendingScriptMap["registerGnbActions"] = registerGnbActions;
+    </script>
+
+</div>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout/base-mobile-layout}">
+
+<head th:replace="/common/fragments/m-header-config :: configFragment"></head>
+
+<th:block layout:fragment="css">
+    <style type="text/css">
+    </style>
+</th:block>
+
+<th:block layout:fragment="script">
+    <script type="text/javascript" th:inline="javascript">
+        function onFrontScriptReady() {
+            runPendingScripts();
+            NSSP.init();
+
+            console.log("front script ready...");
+
+            // erase access-token forced logout
+            clearLoginData();
+
+            NSCTRL.buildControls();
+            registerCustomControlEvents();
+
+            onAfterAnimation();
+        }
+
+        function onAfterAnimation() {
+            $(".login-box").addClass("showing");
+
+            $(".btn-ripple.login").off("click");
+            $(".btn-ripple.login").on("click", function () {
+                TCARE.doLogin();
+            });
+
+            const loginToken = NSCommon.readCookie("tcare.login-token");
+            if (NSCommon.isEmpty(loginToken) === false) {
+                const sendData = {};
+                sendData.loginToken = loginToken;
+                NSCommon.apiPost("/open-api/extract-login-payload", sendData, "json", true, function (jsonResult) {
+                    $("#agency-code").val(jsonResult.username);
+                    $(".ns-checkbox.save-account").addClass("active");
+                });
+            }
+        }
+
+        function registerCustomControlEvents() {
+        }
+
+        function clearLoginData() {
+            let userType = NSCommon.readCookie("tcare.user-type");
+            if (!NSCommon.isEmpty(userType) && userType !== "guest") {
+                NSCommon.eraseCookie("tcare.access-token");
+                NSCommon.eraseCookie("tcare.refresh-token");
+                NSCommon.eraseCookie("tcare.user-info");
+                NSCommon.eraseCookie("tcare.user-type");
+                location.replace("/page/index");
+            }
+        }
+    </script>
+</th:block>
+
+
+<div id="content" class="tcare-main" layout:fragment="content">
+    <div class="box-wrapper">
+        <div class="login-box">
+            <span class="service-title"><em class="typo-t">T</em><em class="typo-factory">Factory</em></span>
+            <img src="/assets/images/ilst_clerk.png" style="width: 275px; margin-bottom: 32px;"/>
+            <span class="service-branch">T-CARE SERVICE</span>
+
+            <div class="login-form-wrapper" style="box-sizing: border-box; width: 100%; padding: 0px 32px;">
+                <input type="text" id="agency-code" class="ns-input-field"
+                       placeholder="매장코드 (D로 시작하는 10자리 코드)" style="margin-top: 16px;"/>
+                <input type="password" id="password" class="ns-input-field"
+                       placeholder="비밀번호" style="margin-top: 16px;"/>
+                <span class="ns-checkbox save-account" style="margin-top: 16px; margin-left: 20px;" text-color="#afafaf"
+                      label="로그인 정보 저장"></span>
+                <button type="button" class="btn-ripple login" style="margin-top: 32px;">로그인</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</html>

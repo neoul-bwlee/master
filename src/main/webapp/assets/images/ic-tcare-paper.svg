@@ -1,0 +1,11 @@
+<svg data-name="ic_chat list" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <path data-name="사각형 13088" style="fill:none" d="M0 0h24v24H0z"/>
+    <g data-name="그룹 64081" transform="translate(-692 -246)">
+        <rect data-name="사각형 41297" width="18" height="2" rx="1" transform="translate(697 265)" style="fill:#fff"/>
+        <rect data-name="사각형 41298" width="18" height="2" rx="1" transform="translate(697 257)" style="fill:#fff"/>
+        <rect data-name="사각형 41299" width="18" height="2" rx="1" transform="translate(697 249)" style="fill:#fff"/>
+        <circle data-name="타원 2880" cx="1" cy="1" r="1" transform="translate(693 265)" style="fill:#fff"/>
+        <circle data-name="타원 2881" cx="1" cy="1" r="1" transform="translate(693 257)" style="fill:#fff"/>
+        <circle data-name="타원 2882" cx="1" cy="1" r="1" transform="translate(693 249)" style="fill:#fff"/>
+    </g>
+</svg>

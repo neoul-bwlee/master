@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+    <defs>
+        <clipPath id="oz97fppk0a">
+            <circle data-name="타원 21" cx="16" cy="16" r="16" style="fill:#999"/>
+        </clipPath>
+        <clipPath id="4bjdsntufb">
+            <path data-name="사각형 92" style="fill:#fff" d="M0 0h17.13v26.327H0z"/>
+        </clipPath>
+    </defs>
+    <g data-name="그룹 164">
+        <g data-name="그룹 121">
+            <circle data-name="타원 21" cx="16" cy="16" r="16" style="fill:#999"/>
+        </g>
+        <g data-name="마스크 그룹 16" style="clip-path:url(#oz97fppk0a)">
+            <g data-name="그룹 124">
+                <g data-name="그룹 123" style="clip-path:url(#4bjdsntufb)" transform="translate(7.435 7.547)">
+                    <path data-name="패스 36" d="M12.062 4.946A4.947 4.947 0 1 1 7.116 0a4.946 4.946 0 0 1 4.946 4.946" transform="translate(1.45)" style="fill:#fff"/>
+                    <path data-name="패스 37" d="M17.13 22.641H0v-8.564a8.565 8.565 0 0 1 8.564-8.566 8.565 8.565 0 0 1 8.564 8.566z" transform="translate(0 3.686)" style="fill:#fff"/>
+                </g>
+            </g>
+        </g>
+        <g data-name="그룹 125">
+            <g data-name="타원 21" style="stroke:#838383;fill:none">
+                <circle cx="16" cy="16" r="16" style="stroke:none"/>
+                <circle cx="16" cy="16" r="15.5" style="fill:none"/>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head th:fragment="configFragment">
+    <meta charset="utf-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, target-densitydpi=medium-dpi"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- 썸네일 -->
+    <meta property="og:image" content="/assets/images/gotg_ogimage.png"/>
+    <!-- 파비콘 -->
+    <link rel="shortcut icon" href="/assets/images/dialog/ic-gotg-logo-04.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/images/dialog/ic-gotg-logo-04.svg" type="image/svg+xml">
+
+    <meta property="og:image" content="/assets/images/gotg_ogimage.png">
+    <meta property="og:url" content="https://w.tcare.best"/>
+
+    <title>T-Care</title>
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="/assets/css/jquery-ui.min.css"/>
+    <link rel="stylesheet" type="text/css" href="/assets/css/tcare.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/ohno/popup.js@1.0.1/popup.min.css">
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ua-parser-js@0/dist/ua-parser.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/ohno/popup.js@1.0.1/popup.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/jquery.number.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.base64.js"></script>
+
+    <script type="text/javascript" src="/assets/js/ns-common.js?v=1"></script>
+    <script type="text/javascript" src="/assets/js/ns-subpage.js?v=1"></script>
+    <script type="text/javascript" src="/assets/js/ns-pager.js?v=1"></script>
+    <script type="text/javascript" src="/assets/js/ns-controls.js?v=1"></script>
+    <script type="text/javascript" src="/assets/js/ns-sidepanel.js?v=1"></script>
+
+    <!-- user define css -->
+    <th:block layout:fragment="css"></th:block>
+
+    <!-- user define javascripts -->
+    <th:block layout:fragment="script"></th:block>
+
+    <script type="text/javascript">
+        var skipAuthentication = false;
+        var defaultFontSize = "font-normal";
+
+        var pendingScriptMap = {};
+
+        function checkFrontScriptCallback() {
+            if (typeof onFrontScriptReady !== "undefined") {
+
+                if (NSCommon.isScriptReady() === false) {
+                    setTimeout(checkFrontScriptCallback, 100);
+                    return;
+                }
+
+                $(window).on("resize", function(e) {
+                    if (typeof onWindowResized !== "undefined")
+                        onWindowResized($(window).width());
+                });
+
+                NSCommon.initClickOutside();
+                if ($(".wrap")) {
+                    $(".wrap").css({"position": "", "left": "0px"});
+                    $(".wrap").addClass("after-onload");
+                }
+
+                if (skipAuthentication === false)
+                    NSCommon.accessInitialize(onFrontScriptReady);
+                else
+                    onFrontScriptReady();
+            }
+            else {
+                setTimeout(checkFrontScriptCallback, 100);
+            }
+        }
+
+        function runPendingScripts() {
+            if (pendingScriptMap === null || Object.keys(pendingScriptMap).length === 0)
+                return;
+
+            var scriptKeys = Object.keys(pendingScriptMap);
+            for (var i = 0; i < scriptKeys.length; i++) {
+                if (typeof pendingScriptMap[scriptKeys[i]] !== "undefined") {
+                    console.log("[PENDING] call " + scriptKeys[i] + "();");
+                    pendingScriptMap[scriptKeys[i]]();
+                }
+                delete pendingScriptMap[scriptKeys[i]];
+            }
+
+            Array.from(document.querySelectorAll(".btn-ripple")).forEach(button => {
+                button.addEventListener("click", function (e) {
+                    const ripple = document.createElement("div"),
+                        rect = button.getBoundingClientRect();
+
+                    ripple.className = "animate",
+                        ripple.style.left = `${e.x - rect.left}px`,
+                        ripple.style.top = `${e.y - rect.top}px`,
+                        ripple.style.background = `#${button.dataset.color !== undefined ? button.dataset.color : "000000"}`,
+                        ripple.style.opacity = `${button.dataset.opacity !== undefined ? button.dataset.opacity : "0.08"}`;
+                    ripple.style.setProperty("--material-scale", button.offsetWidth),
+                        button.append(ripple),
+                        setTimeout(function () {
+                            if (ripple.parentNode)
+                                ripple.parentNode.removeChild(ripple);
+                        }, 500);
+                });
+            });
+        }
+
+        $(document).ready(function() {
+            NSCommon.loadScript('/assets/js/tcare.js');
+
+            if (typeof setSkipAuthentication === "function")
+                skipAuthentication = setSkipAuthentication();
+            checkFrontScriptCallback();
+        });
+    </script>
+</head>
+
+</html>

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+
+<div class="top-bar" th:fragment="topbarFragment">
+    <div class="top-bar-left">
+        <img src="/assets/images/ic-gotg-logo.svg" style="width: 92px; margin-top: 28px;"/>
+        <div class="gnb-menu">
+            <div class="gnb-menu-item home active">
+                <span class="gnb-name">HOME</span>
+                <span class="selected-bar"></span>
+            </div>
+            <div class="gnb-menu-item dag">
+                <span class="gnb-name">DAG</span>
+                <span class="selected-bar"></span>
+            </div>
+            <div class="gnb-menu-item staking">
+                <span class="gnb-name">STAKING</span>
+                <span class="selected-bar"></span>
+            </div>
+            <div class="gnb-menu-item chat">
+                <span class="gnb-name">CHAT</span>
+                <span class="selected-bar"></span>
+            </div>
+        </div>
+    </div>
+    <div class="top-bar-right" style="margin-top: 20px;">
+        <div>
+            <span class="btn-create-account dis-none">Create Account</span>
+        </div>
+        <div class="ns-icon-input top-search" field-width="240px" icon="ns-icon search" placeholder="Search content."
+             style="display: none;"></div>
+        <span class="my-page" style="margin-left: 24px;"><img class="ns-icon gotg-bullet"></img><em
+                class="font-bold">MyPage</em></span>
+    </div>
+
+    <script th:inline="javascript" type="text/javascript">
+        function registerGnbActions() {
+
+
+            console.log("registerGnbActions called... ");
+
+            $(".gnb-menu-item").off("click");
+            $(".gnb-menu-item").on("click", function () {
+                let gnbIndex = $(".gnb-menu-item").index($(this));
+                $(".gnb-menu-item").removeClass("active");
+                $(this).addClass("active");
+
+                NSCommon.createCookie("tcare.last.page", gnbIndex, 7 * 24 * 60 * 60 * 1000);
+
+                onClickGnbItem(gnbIndex);
+            });
+
+            $(".account-empty-wrap button").off("click");
+            $(".account-empty-wrap button").on("click", function () {
+                mobileLoginPageOpen();
+            });
+
+            $(".my-page").off("click");
+            $(".my-page").on("click", function () {
+
+                let isLogin = NSCommon.isEmpty(GOTG_W.getServiceData()) === false &&
+                    GOTG_W.getServiceData().accounts.length > 0;
+
+                if (isLogin) {
+                    console.log("open mypage sidepanel");
+                    showSidePanel("my-page", "right", function (pageContainer) {
+                        elemSidePanel.find(".page-back").off("click");
+                        elemSidePanel.find(".page-back").on("click", function () {
+                            hideSidePanel("right");
+                        });
+
+                        $('#my-page .bg-gradient-wrap .btn-accept:eq(0)').off('click');
+                        $('#my-page .bg-gradient-wrap .btn-accept:eq(0)').on("click", function () {
+                            GOTG_W.myPageOpenResetPage();
+                        });
+
+                        $("#my-page .btn-ripple.logout").off("click");
+                        $("#my-page .btn-ripple.logout").on("click", function () {
+                            GOTG_W.logout();
+                        });
+
+                        $("#my-page .btn-ripple.notice-news").off("click");
+                        $("#my-page .btn-ripple.notice-news").on("click", function () {
+                            GOTG_W.openNoticeNewsPage();
+                            // console.log('안녕')
+                        });
+
+
+                        $(".my-page-content .content-detail:eq(0) .content-detail-score").text(
+                            $.number(GOTG_W.getServiceData().accounts.length, 0));
+                        $(".my-page-content .content-detail:eq(1) .content-detail-score").text(
+                            $.number(GOTG_W.getServiceData().stakings.length, 0));
+
+                        $(".my-page-qr").off("click");
+                        $(".my-page-qr").on("click", function () {
+                            let accountInfo = GOTG_W.getServiceData().accounts;
+
+                            let checkAccount = "";
+                            for (let i = 0; i < accountInfo.length; i++) {
+                                if (accountInfo[i].accountMaster && accountInfo[i]
+                                    .accountType == "outside") {
+                                    checkAccount = accountInfo[i].account;
+                                }
+                            }
+
+                            if (!NSCommon.isEmpty(checkAccount)) {
+                                NSCommon.showDialog("token-receive", function (sendResult) {
+                                    let qrCreateUrl = checkAccount;
+                                    const qr = qrcode(6, 'L');
+                                    qr.addData(qrCreateUrl);
+                                    qr.make();
+                                    $(".token-receive .dialog-content").find(".qr-item")
+                                        .get(0).innerHTML = qr.createImgTag();
+
+                                    $(".token-receive-account").text(qrCreateUrl);
+
+                                });
+                            }
+                        })
+
+                        let myInfo = GOTG_W.getServiceData().userInfo;
+                        console.log(myInfo);
+                        $("#my-page .my-page-profile").off("click");
+                        $("#my-page .my-page-profile").on("click", function () {
+                            // update account photo
+                            NSCommon.registFileUpload("profile", "image/!*", function (
+                                uploadedUrl) {
+                                GOTG_W.changeMyInfoProfile($(
+                                        "#my-page .my-page-profile"),
+                                    myInfo, uploadedUrl);
+                            });
+                            $("#attach").trigger("click");
+                        });
+
+                        let nickname = "";
+                        if (NSCommon.isEmpty(myInfo.nickname)) {
+                            nickname = myInfo.username;
+                        } else {
+                            nickname = myInfo.nickname;
+                        }
+
+                        $(".my-page-nickname").text(NSCommon.B64.decode(nickname));
+
+                        let profileUrl = "";
+                        if (NSCommon.isEmpty(myInfo.profileUrl)) {
+                            profileUrl = "/assets/images/profile-sample.png";
+                        } else {
+                            profileUrl = myInfo.profileUrl;
+                        }
+                        $(".my-page-profile-area .profile").attr("src", profileUrl);
+
+                        // 닉네임 변경
+                        $("#my-page .my-page-icon-name p").off("click");
+                        $("#my-page .my-page-icon-name p").on("click", function () {
+                            GOTG_W.changeMyInfoNickname($("#my-page .my-page-icon-name p"),
+                                myInfo,
+                                NSCommon.B64.decode(myInfo.nickname));
+                        });
+
+                        $("#myInfo").off("click");
+                        $("#myInfo").on("click", function () {
+                            NSCommon.showDialog("my-info", function (sendResult) {
+
+                                $(".radio-area").off("click");
+                                $(".radio-area").on("click", function () {
+                                    $(this).parent().find(".radio-label")
+                                        .removeClass("on");
+                                    $(this).parent().find(".ic-radio")
+                                        .removeClass("on");
+                                    $(this).find(".ic-radio").addClass("on");
+                                    $(this).find(".radio-label").addClass("on");
+                                });
+
+                                let userInfo = GOTG_W.getServiceData().userInfo;
+                                let userEmail = userInfo.email;
+                                let userPhone = userInfo.phoneNumber;
+                                let userGender = userInfo.gender;
+                                let userBirth = userInfo.birth;
+
+                                console.log(userInfo);
+
+                                $(".my-info-content .my-info-email").text(userEmail);
+                                $(".my-info-content .my-info-phoneNumber").val(
+                                    userPhone);
+                                $(".my-info-content .my-info-birth").val(userBirth);
+                                if (userGender == "male") {
+                                    $(".my-info-content .radio-area").find(".ic-radio")
+                                        .removeClass("on");
+                                    $(".my-info-content .radio-area").find(
+                                        ".radio-label").removeClass("on");
+                                    $("#radio_male").addClass("on");
+                                    $("#radio_male").parent().find(".radio-label")
+                                        .addClass("on");
+                                } else if (userGender == "female") {
+                                    $(".my-info-content .radio-area").find(".ic-radio")
+                                        .removeClass("on");
+                                    $(".my-info-content .radio-area").find(
+                                        ".radio-label").removeClass("on");
+                                    $("#radio_female").addClass("on");
+                                    $("#radio_female").parent().find(".radio-label")
+                                        .addClass("on");
+                                } else {
+                                    $(".my-info-content .radio-area").find(".ic-radio")
+                                        .removeClass("on");
+                                    $(".my-info-content .radio-area").find(
+                                        ".radio-label").removeClass("on");
+                                    $("#radio_male").addClass("on");
+                                    $("#radio_male").parent().find(".radio-label")
+                                        .addClass("on");
+                                }
+                            });
+                        })
+
+                    });
+                } else {
+                    //  로그인 회원가입 팝업 기능
+                    mobileLoginPageOpen();
+
+                }
+
+            });
+
+
+            let lastSeenPage = NSCommon.readCookie("tcare.last.page");
+            if (NSCommon.isEmpty(lastSeenPage)) {
+                lastSeenPage = 0;
+                NSCommon.createCookie("tcare.last.page", lastSeenPage, 7 * 24 * 60 * 60 * 1000);
+            }
+
+
+            $(".gnb-menu-item").eq(lastSeenPage).trigger("click");
+
+
+        }
+
+        function mobileLoginPageOpen() {
+            NSCommon.showDialog("login-page", function (dialogContent) {
+                //PC버전 회원 가입
+                $('.login-page .login-form-wrapper .sign-up').off('click');
+                $('.login-page .login-form-wrapper .sign-up').on("click", function () {
+                    GOTG_W.openJoinForm();
+                });
+
+                $(".login-page .login-form-wrapper .find-pass").off("click");
+                $(".login-page .login-form-wrapper .find-pass").on("click", function () {
+                    GOTG_W.findPassword();
+                });
+
+                //PC버전 로그인 버튼
+                $('.login-form-wrapper .btn-ripple.login').off('click');
+                $('.login-form-wrapper .btn-ripple.login').on('click', function () {
+                    GOTG_W.doLogin();
+                });
+
+                $('.join-page  .sign-in').off('click');
+                $('.join-page  .sign-in').on("click", function () {
+                    NSCommon.showDialog("login-page", function (sendResult) {
+                    });
+                });
+            });
+        }
+
+        function myNameText() {
+            let isLogin = NSCommon.isEmpty(GOTG_W.getServiceData()) === false &&
+                GOTG_W.getServiceData().accounts.length > 0;
+
+            let isName = GOTG_W.getServiceData().userInfo.username;
+            if (isLogin) {
+                $('#content .account-wrapper #ns-account-slider').addClass('active');
+                $('#content .account-wrapper .account-empty-wrap').removeClass('active');
+                $('.top-bar .top-bar-right .my-page em').removeClass('font-bold');
+                $('.top-bar .top-bar-right .my-page em').text(isName);
+
+                GOTG_W.loadMemberNotice(function (noticeContent) {
+                    if (NSCommon.isEmpty(noticeContent) === true) return;
+
+                    for (let i = 0; i < noticeContent.length; i++) {
+                        let noticeLoginObj = $('#html-part .notice-login-wrap').clone();
+                        $('.notice-login-dialog  .swiper-wrapper').append(noticeLoginObj);
+                        let lastObj = $('.notice-login-dialog .notice-login-wrap:last-child')
+
+                        $(lastObj).attr('notice-seq', noticeContent[i].seq)
+                        $(lastObj).find('.dialog-header h2').text(NSCommon.B64.decode(noticeContent[i]
+                            .noticeTitle))
+                        $(lastObj).find('.dialog-content  span').append(NSCommon.B64.decode(noticeContent[i]
+                            .noticeContent));
+                        $(lastObj).find('.dialog-header').append('<em>' + NSCommon.timeDiff(noticeContent[i]
+                            .registeredAt) + '</em>');
+                    }
+
+                    loadInMultiNotice()
+                });
+            } else {
+
+                $('#content .account-wrapper #ns-account-slider').removeClass('active');
+                $('#content .account-wrapper .account-empty-wrap').addClass('active');
+                $('.top-bar .top-bar-right .my-page em').text('MyPage');
+                $('.top-bar .top-bar-right .my-page em').addClass('font-bold');
+
+                GOTG_W.loadPublicNotice(function (noticeContent) {
+                    if (NSCommon.isEmpty(noticeContent) === true) return;
+
+                    for (let i = 0; i < noticeContent.length; i++) {
+                        let noticeLogoutObj = $('#html-part .notice-logout-wrap').clone();
+                        $('.notice-logout-dialog  .swiper-wrapper').append(noticeLogoutObj);
+                        let lastObj = $('.notice-logout-dialog .notice-logout-wrap:last-child')
+                        $(lastObj).attr('notice-seq', noticeContent[i].seq)
+                        $(lastObj).find('.dialog-header h2').text(NSCommon.B64.decode(noticeContent[i]
+                            .noticeTitle))
+                        $(lastObj).find('.dialog-content  span').append(NSCommon.B64.decode(noticeContent[i]
+                            .noticeContent));
+                        $(lastObj).find('.dialog-header').append('<em>' + NSCommon.timeDiff(noticeContent[i]
+                            .registeredAt) + '</em>');
+                    }
+
+                    loadLogoutMultiNotice();
+                });
+            }
+        }
+
+        function loadLogoutMultiNotice() {
+            NSCommon.showMultiDialog("notice-logout-dialog", function (dialogContent) {
+
+                 new Swiper(" .notice-logout-dialog.my-swiper", {
+                    effect: "coverflow",
+                    grabCursor: true,
+                    centeredSlides: true,
+                    slidesPerView: "auto",
+
+                    coverflowEffect: {
+                        rotate: -18,
+                        stretch: -15,
+                        depth: 120,
+                        modifier: 1,
+                        slideShadows: false,
+                    },
+                });
+
+
+                dialogNoticeClick();
+            })
+
+        }
+
+        function loadInMultiNotice() {
+            NSCommon.showMultiDialog("notice-login-dialog", function (dialogContent) {
+
+                    new Swiper(".notice-login-dialog.my-swiper", {
+                        effect: "coverflow",
+                        grabCursor: true,
+                        centeredSlides: true,
+                        slidesPerView: "auto",
+                        coverflowEffect: {
+                            rotate: -18,
+                            stretch: -15,
+                            depth: 120,
+                            modifier: 1,
+                            slideShadows: false,
+                        },
+                    });
+
+            })
+                dialogNoticeClick();
+
+        }
+
+        function dialogNoticeClick() {
+            $('.dialog-multi-main').find('.dialog-action .btn-ripple').off("click");
+            $('.dialog-multi-main').find('.dialog-action .btn-ripple').on("click", function () {
+
+                let noticeSeq = $(this).parent().parent().attr('notice-seq');
+                let noticeCheck = $(this).parent().parent().find('.ns-checkbox').hasClass('active');
+
+                if (noticeCheck) {
+                    NSCommon.createCookie("tcare.notice." + noticeSeq, 24 * 60 * 60 * 1000)
+                }
+                NSCommon.closeDialog();
+            })
+
+            $('.dialog-multi-main').find('.dialog-checkbox .ns-checkbox').off("click");
+            $('.dialog-multi-main').find('.dialog-checkbox .ns-checkbox').on("click", function () {
+
+                $(this).toggleClass("active");
+            })
+        }
+
+        pendingScriptMap["registerGnbActions"] = registerGnbActions;
+    </script>
+</div>
